@@ -9,10 +9,9 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/detail/:movieID',
+    path: '/detail/:mediaType/:movieID',
     name: 'detail',
-    component: DetailView,
-    props: true
+    component: DetailView
   }
 ]
 

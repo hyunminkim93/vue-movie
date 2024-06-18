@@ -199,9 +199,6 @@ const handleKeyPress = (event) => {
         background-color: #1c1c1c;
         border-radius: 4px;
         overflow: hidden;
-        margin-bottom: 20px;
-        width: calc(20% - 10px); // 각 카드 간격을 포함한 너비 조정
-        height: 300px; // 카드의 높이 설정
         position: relative;
         color: #fff;
       }

@@ -7,28 +7,69 @@ import { useRouter } from 'vue-router'
 
 const latestMovies = ref([])
 const searchResults = ref([])
+const topMovies = ref([]) // 상위 100개의 영화 데이터를 저장할 ref 추가
+const people = ref([])
+const selectedPersonMovies = ref([])
 const searchQuery = ref('')
 const apikey = '942eab3ec16f08c32c8509fcdb16fcd4'
+const currentCategory = ref(localStorage.getItem('currentCategory') || 'movies')
+const showModal = ref(false)
+const showPersonModal = ref(false)
+const videoUrl = ref('')
+const page = ref(1) // 페이지 번호를 관리합니다.
+const isLoading = ref(false) // 데이터 로딩 상태를 관리합니다.
 
-const fetchMovies = async () => {
+const fetchMovies = async (category) => {
+  if (isLoading.value) return
+  isLoading.value = true
   try {
-    const latestResponse = await axios.get(
-      `https://api.themoviedb.org/3/movie/now_playing?api_key=${apikey}&page=1`
-    )
-    latestMovies.value = latestResponse.data.results
+    let url = ''
+    if (category === 'movies') {
+      url = `https://api.themoviedb.org/3/movie/now_playing?api_key=${apikey}&page=${page.value}`
+    } else if (category === 'shows') {
+      url = `https://api.themoviedb.org/3/discover/tv?api_key=${apikey}&with_origin_country=KR&page=${page.value}`
+    } else if (category === 'anime') {
+      url = `https://api.themoviedb.org/3/discover/tv?api_key=${apikey}&with_genres=16&page=${page.value}`
+    } else if (category === 'people') {
+      url = `https://api.themoviedb.org/3/person/popular?api_key=${apikey}&page=${page.value}`
+    } else if (category === 'top100') {
+      url = `https://api.themoviedb.org/3/movie/top_rated?api_key=${apikey}&page=${page.value}`
+    }
+
+    const response = await axios.get(url)
+    if (category === 'people') {
+      people.value.push(...response.data.results)
+    } else if (category === 'top100') {
+      topMovies.value.push(...response.data.results)
+    } else {
+      latestMovies.value.push(...response.data.results)
+    }
+    page.value++
   } catch (error) {
     console.log(error)
+  } finally {
+    isLoading.value = false
   }
 }
 
+const fetchCategoryData = async (category) => {
+  currentCategory.value = category
+  localStorage.setItem('currentCategory', category)
+  latestMovies.value = []
+  topMovies.value = []
+  people.value = []
+  page.value = 1
+  await fetchMovies(category)
+}
+
 const searchMovies = async (query) => {
+  if (query.trim() === '') {
+    searchResults.value = []
+    return
+  }
   try {
-    if (query.trim() === '') {
-      searchResults.value = []
-      return
-    }
     const searchResponse = await axios.get(
-      `https://api.themoviedb.org/3/search/movie?api_key=${apikey}&query=${query}`
+      `https://api.themoviedb.org/3/search/multi?api_key=${apikey}&query=${query}`
     )
     searchResults.value = searchResponse.data.results
   } catch (error) {
@@ -36,17 +77,110 @@ const searchMovies = async (query) => {
   }
 }
 
+const fetchPersonMovies = async (personId) => {
+  try {
+    const response = await axios.get(
+      `https://api.themoviedb.org/3/person/${personId}/movie_credits?api_key=${apikey}`
+    )
+    selectedPersonMovies.value = response.data.cast
+    showPersonModal.value = true
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const fetchVideo = async (id, mediaType) => {
+  try {
+    const response = await axios.get(
+      `https://api.themoviedb.org/3/${mediaType}/${id}/videos?api_key=${apikey}`
+    )
+    const videos = response.data.results
+    const trailer = videos.find((video) => video.type === 'Trailer' && video.site === 'YouTube')
+    if (trailer) {
+      return `https://www.youtube.com/embed/${trailer.key}?autoplay=1`
+    } else {
+      return ''
+    }
+  } catch (error) {
+    console.log(error)
+    return ''
+  }
+}
+
 const router = useRouter()
 
-const goToMovieDetail = (id) => {
-  router.push({ name: 'detail', params: { movieID: id } })
+const goToMovieDetail = (id, mediaType) => {
+  router.push({ name: 'detail', params: { movieID: id, mediaType } })
+}
+
+const goToHome = () => {
+  searchResults.value = []
+  searchQuery.value = ''
+  fetchCategoryData(currentCategory.value)
+}
+
+const playVideo = async (id, mediaType) => {
+  const video = await fetchVideo(id, mediaType)
+  if (video) {
+    videoUrl.value = video
+    showModal.value = true
+  } else {
+    alert('트레일러 영상을 찾을 수 없습니다.')
+  }
+}
+
+const playPersonMovieVideo = async (id) => {
+  const video = await fetchVideo(id, 'movie')
+  if (video) {
+    videoUrl.value = video
+    showPersonModal.value = false
+    showModal.value = true
+  } else {
+    alert('트레일러 영상을 찾을 수 없습니다.')
+  }
+}
+
+const closeModal = () => {
+  showModal.value = false
+  videoUrl.value = ''
+  if (currentCategory.value === 'people') {
+    showPersonModal.value = true
+  }
+}
+
+const closePersonModal = () => {
+  showPersonModal.value = false
+  selectedPersonMovies.value = []
+}
+
+const observer = ref(null)
+const loadMore = (entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      fetchMovies(currentCategory.value)
+    }
+  })
+}
+
+const initializeObserver = () => {
+  observer.value = new IntersectionObserver(loadMore, {
+    root: null,
+    rootMargin: '0px',
+    threshold: 1.0
+  })
+  if (observer.value) {
+    observer.value.observe(document.querySelector('#scroll-anchor'))
+  }
 }
 
 watch(searchQuery, (newQuery) => {
   searchMovies(newQuery)
 })
 
-onMounted(fetchMovies)
+onMounted(() => {
+  fetchCategoryData(currentCategory.value)
+  initializeObserver()
+})
 </script>
 
 <template>
@@ -54,21 +188,179 @@ onMounted(fetchMovies)
   <main id="main" role="main">
     <div class="view__inner container">
       <div class="tabs">
-        <div class="tab active">최신영화</div>
+        <button
+          @click="fetchCategoryData('movies')"
+          :class="{ active: currentCategory === 'movies' }"
+        >
+          영화
+        </button>
+        <button
+          @click="fetchCategoryData('top100')"
+          :class="{ active: currentCategory === 'top100' }"
+        >
+          Top 100
+        </button>
+        <button
+          @click="fetchCategoryData('people')"
+          :class="{ active: currentCategory === 'people' }"
+        >
+          영화인
+        </button>
+        <button
+          @click="fetchCategoryData('shows')"
+          :class="{ active: currentCategory === 'shows' }"
+        >
+          방송
+        </button>
+        <button
+          @click="fetchCategoryData('anime')"
+          :class="{ active: currentCategory === 'anime' }"
+        >
+          애니
+        </button>
       </div>
       <div class="cards">
         <div
-          v-for="(movie, index) in searchResults.length ? searchResults : latestMovies"
+          v-if="currentCategory !== 'people' && currentCategory !== 'top100'"
+          v-for="(item, index) in searchResults.length ? searchResults : latestMovies"
           :key="index"
-          :class="'view__card style' + (index + 1)"
-          @click="goToMovieDetail(movie.id)"
+          class="view__card"
         >
-          <img :src="'https://image.tmdb.org/t/p/w500' + movie.poster_path" :alt="movie.title" />
+          <img
+            :src="
+              item.poster_path
+                ? 'https://image.tmdb.org/t/p/w500' + item.poster_path
+                : 'fallback-image-url.jpg'
+            "
+            :alt="item.title || item.name"
+          />
+          <h3>{{ item.title || item.name }}</h3>
+          <div class="ratings">
+            <p>평점: {{ item.vote_average.toFixed(1) }}</p>
+            <div class="stars">
+              <span
+                v-for="n in 5"
+                :key="n"
+                class="star"
+                :class="{ filled: n <= Math.round(item.vote_average / 2) }"
+                >★</span
+              >
+            </div>
+          </div>
+          <div class="overlay">
+            <button
+              class="play-button"
+              @click.stop="
+                playVideo(item.id, item.media_type || currentCategory === 'movies' ? 'movie' : 'tv')
+              "
+            >
+              ▶️
+            </button>
+            <button
+              class="detail-button"
+              @click.stop="
+                goToMovieDetail(
+                  item.id,
+                  item.media_type || currentCategory === 'movies' ? 'movie' : 'tv'
+                )
+              "
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <div
+          v-if="currentCategory === 'people'"
+          v-for="(person, index) in people"
+          :key="index"
+          class="view__card"
+          @click="fetchPersonMovies(person.id)"
+        >
+          <img
+            :src="
+              person.profile_path
+                ? 'https://image.tmdb.org/t/p/w500' + person.profile_path
+                : 'fallback-image-url.jpg'
+            "
+            :alt="person.name"
+          />
+          <h3>{{ person.name }}</h3>
+        </div>
+        <div
+          v-if="currentCategory === 'top100'"
+          v-for="(item, index) in topMovies"
+          :key="index"
+          class="view__card"
+        >
+          <img
+            :src="
+              item.poster_path
+                ? 'https://image.tmdb.org/t/p/w500' + item.poster_path
+                : 'fallback-image-url.jpg'
+            "
+            :alt="item.title || item.name"
+          />
+          <h3>{{ item.title || item.name }}</h3>
+          <div class="ratings">
+            <p>평점: {{ item.vote_average.toFixed(1) }}</p>
+            <div class="stars">
+              <span
+                v-for="n in 5"
+                :key="n"
+                class="star"
+                :class="{ filled: n <= Math.round(item.vote_average / 2) }"
+                >★</span
+              >
+            </div>
+          </div>
+          <div class="overlay">
+            <button class="play-button" @click.stop="playVideo(item.id, 'movie')">▶️</button>
+            <button class="detail-button" @click.stop="goToMovieDetail(item.id, 'movie')">+</button>
+          </div>
+        </div>
+      </div>
+      <div id="scroll-anchor"></div>
+    </div>
+  </main>
+  <div v-if="showModal" class="modal-overlay" @click="closeModal">
+    <div class="modal-content" @click.stop>
+      <iframe
+        :src="videoUrl"
+        frameborder="0"
+        allow="autoplay; encrypted-media"
+        allowfullscreen
+      ></iframe>
+      <button @click="closeModal" class="close-button">닫기</button>
+    </div>
+  </div>
+  <div
+    v-if="showPersonModal && currentCategory === 'people'"
+    class="modal-overlay"
+    @click="closePersonModal"
+  >
+    <div class="modal-content" @click.stop>
+      <h2>출연 영화</h2>
+      <div class="cards">
+        <div
+          v-for="(movie, index) in selectedPersonMovies"
+          :key="index"
+          class="view__card"
+          @click="playPersonMovieVideo(movie.id)"
+        >
+          <img
+            :src="
+              movie.poster_path
+                ? 'https://image.tmdb.org/t/p/w500' + movie.poster_path
+                : 'fallback-image-url.jpg'
+            "
+            :alt="movie.title"
+          />
           <h3>{{ movie.title }}</h3>
         </div>
       </div>
+      <button @click="closePersonModal" class="close-button">닫기</button>
     </div>
-  </main>
+  </div>
   <FooterSection />
 </template>
 
@@ -81,22 +373,29 @@ onMounted(fetchMovies)
   display: flex;
   margin-bottom: 20px;
 }
-.tab {
+button {
   padding: 10px;
   cursor: pointer;
+  color: #fff;
+  background-color: #333;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
 }
-.tab.active {
+button.active {
   font-weight: bold;
+  border: 1px solid #00aaff;
 }
 .cards {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  justify-content: center;
 }
 .view__card {
-  border: 1px solid #ccc;
+  position: relative;
   padding: 10px;
-  width: calc(20% - 20px);
+  width: 200px; /* 고정된 너비 */
   box-sizing: border-box;
   text-align: center;
   cursor: pointer;
@@ -104,5 +403,83 @@ onMounted(fetchMovies)
 .view__card img {
   width: 100%;
   height: auto;
+}
+.ratings {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.stars {
+  display: flex;
+  justify-content: center;
+}
+.star {
+  color: #d3d3d3;
+  font-size: 20px;
+}
+.star.filled {
+  color: #ffc107;
+}
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.play-button,
+.detail-button {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 24px;
+}
+.play-button:hover,
+.detail-button:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 모달의 z-index를 높게 설정 */
+}
+
+.modal-content {
+  position: relative;
+  padding: 40px;
+  border-radius: 8px;
+  width: 80%;
+  height: 80%;
+  background-color: white;
+  overflow-y: auto;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none; /* 보더를 없애서 더 깔끔하게 보이도록 */
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
 }
 </style>
