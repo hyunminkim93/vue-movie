@@ -7,7 +7,7 @@ import { useRouter } from 'vue-router'
 
 const latestMovies = ref([])
 const searchResults = ref([])
-const topMovies = ref([]) // 상위 100개의 영화 데이터를 저장할 ref 추가
+const topMovies = ref([])
 const people = ref([])
 const selectedPersonMovies = ref([])
 const searchQuery = ref('')
@@ -16,8 +16,8 @@ const currentCategory = ref(localStorage.getItem('currentCategory') || 'movies')
 const showModal = ref(false)
 const showPersonModal = ref(false)
 const videoUrl = ref('')
-const page = ref(1) // 페이지 번호를 관리합니다.
-const isLoading = ref(false) // 데이터 로딩 상태를 관리합니다.
+const page = ref(1)
+const isLoading = ref(false)
 
 const fetchMovies = async (category) => {
   if (isLoading.value) return
@@ -29,20 +29,49 @@ const fetchMovies = async (category) => {
     } else if (category === 'shows') {
       url = `https://api.themoviedb.org/3/discover/tv?api_key=${apikey}&with_origin_country=KR&page=${page.value}`
     } else if (category === 'anime') {
-      url = `https://api.themoviedb.org/3/discover/tv?api_key=${apikey}&with_genres=16&page=${page.value}`
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=16&page=${page.value}`
     } else if (category === 'people') {
       url = `https://api.themoviedb.org/3/person/popular?api_key=${apikey}&page=${page.value}`
     } else if (category === 'top100') {
       url = `https://api.themoviedb.org/3/movie/top_rated?api_key=${apikey}&page=${page.value}`
+    } else if (category === 'variety') {
+      url = `https://api.themoviedb.org/3/discover/tv?api_key=${apikey}&with_genres=10764&page=${page.value}`
+    } else if (category === 'comedy') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=35&page=${page.value}`
+    } else if (category === 'action') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=28&page=${page.value}`
+    } else if (category === 'romance') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=10749&page=${page.value}`
+    } else if (category === 'war') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=10752&page=${page.value}`
+    } else if (category === 'thriller') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=53&page=${page.value}`
+    } else if (category === 'musical') {
+      url = `https://api.themoviedb.org/3/discover/movie?api_key=${apikey}&with_genres=10402&page=${page.value}`
     }
 
     const response = await axios.get(url)
+    const results = response.data.results.map((item) => ({
+      ...item,
+      media_type:
+        category === 'movies' ||
+        category === 'top100' ||
+        category === 'comedy' ||
+        category === 'action' ||
+        category === 'romance' ||
+        category === 'war' ||
+        category === 'thriller' ||
+        category === 'musical'
+          ? 'movie'
+          : 'tv'
+    }))
+
     if (category === 'people') {
-      people.value.push(...response.data.results)
+      people.value.push(...results)
     } else if (category === 'top100') {
-      topMovies.value.push(...response.data.results)
+      topMovies.value.push(...results)
     } else {
-      latestMovies.value.push(...response.data.results)
+      latestMovies.value.push(...results)
     }
     page.value++
   } catch (error) {
@@ -213,10 +242,49 @@ onMounted(() => {
           방송
         </button>
         <button
+          @click="fetchCategoryData('variety')"
+          :class="{ active: currentCategory === 'variety' }"
+        >
+          예능
+        </button>
+        <button
           @click="fetchCategoryData('anime')"
           :class="{ active: currentCategory === 'anime' }"
         >
           애니
+        </button>
+        <button
+          @click="fetchCategoryData('comedy')"
+          :class="{ active: currentCategory === 'comedy' }"
+        >
+          코미디
+        </button>
+        <button
+          @click="fetchCategoryData('action')"
+          :class="{ active: currentCategory === 'action' }"
+        >
+          액션
+        </button>
+        <button
+          @click="fetchCategoryData('romance')"
+          :class="{ active: currentCategory === 'romance' }"
+        >
+          로맨스
+        </button>
+        <button @click="fetchCategoryData('war')" :class="{ active: currentCategory === 'war' }">
+          전쟁
+        </button>
+        <button
+          @click="fetchCategoryData('thriller')"
+          :class="{ active: currentCategory === 'thriller' }"
+        >
+          스릴러
+        </button>
+        <button
+          @click="fetchCategoryData('musical')"
+          :class="{ active: currentCategory === 'musical' }"
+        >
+          뮤지컬
         </button>
       </div>
       <div class="cards">
@@ -234,6 +302,7 @@ onMounted(() => {
             "
             :alt="item.title || item.name"
           />
+          <LikeView :item-id="item.id" />
           <h3>{{ item.title || item.name }}</h3>
           <div class="ratings">
             <p>평점: {{ item.vote_average.toFixed(1) }}</p>
@@ -300,6 +369,7 @@ onMounted(() => {
             "
             :alt="item.title || item.name"
           />
+          <LikeView :item-id="item.id" />
           <h3>{{ item.title || item.name }}</h3>
           <div class="ratings">
             <p>평점: {{ item.vote_average.toFixed(1) }}</p>
@@ -395,7 +465,7 @@ button.active {
 .view__card {
   position: relative;
   padding: 10px;
-  width: 200px; /* 고정된 너비 */
+  width: 324px;
   box-sizing: border-box;
   text-align: center;
   cursor: pointer;
@@ -452,7 +522,7 @@ button.active {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* 모달의 z-index를 높게 설정 */
+  z-index: 1000;
 }
 
 .modal-content {
@@ -468,7 +538,7 @@ button.active {
 iframe {
   width: 100%;
   height: 100%;
-  border: none; /* 보더를 없애서 더 깔끔하게 보이도록 */
+  border: none;
 }
 
 .close-button {

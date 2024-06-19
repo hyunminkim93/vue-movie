@@ -20,7 +20,10 @@ const handleKeyPress = (event) => {
   <header id="header" role="banner" class="header">
     <div class="header__inner container">
       <div class="logo">
-        <h1><v-icon name="RiMovie2Fill" scale="3"></v-icon>영화를 검색하다</h1>
+        <h1>
+          <img src="../../public/Movie.png" alt="영화를 검색하다 로고" class="logo-img" />
+          <span class="logo-text">영화를 검색하다</span>
+        </h1>
       </div>
     </div>
     <div class="submenu">
@@ -53,109 +56,128 @@ const handleKeyPress = (event) => {
   }
 
   .logo {
-    h1 {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 0;
-      color: #fff;
-    }
-  }
-
-  .nav {
-    &__list {
-      display: flex;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-
-      .nav__item {
-        margin-right: 20px;
-        font-size: 16px;
-        position: relative;
-        display: flex;
-        align-items: center;
-
-        .rating {
-          background-color: red;
-          color: white;
-          border-radius: 50%;
-          padding: 2px 6px;
-          font-size: 12px;
-          margin-left: 5px;
-        }
-      }
-    }
-  }
-
-  .actions {
     display: flex;
     align-items: center;
+  }
 
-    .search-button {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
+  .logo h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: red;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo-img {
+    width: 40px;
+    height: auto;
+    margin-right: 10px;
+    border-radius: 50px;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+    color: red;
+  }
+}
+
+.nav {
+  &__list {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    .nav__item {
       margin-right: 20px;
-    }
-
-    .login-button {
-      background-color: #e50914;
-      border: none;
-      border-radius: 3px;
-      color: white;
-      padding: 5px 10px;
-      cursor: pointer;
       font-size: 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
 
-      &:hover {
-        background-color: #f40612;
+      .rating {
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 12px;
+        margin-left: 5px;
       }
     }
   }
+}
 
-  .submenu {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #1c1c1c;
+.actions {
+  display: flex;
+  align-items: center;
 
-    button,
-    select,
-    input {
-      margin-right: 10px;
-      padding: 5px 10px;
-      background-color: #333;
-      color: #fff;
-      border: none;
-      border-radius: 3px;
-      font-size: 14px;
+  .search-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 20px;
+  }
 
-      &:hover {
-        background-color: #444;
-      }
+  .login-button {
+    background-color: #e50914;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 16px;
+
+    &:hover {
+      background-color: #f40612;
     }
+  }
+}
 
-    button {
-      cursor: pointer;
-    }
+.submenu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #1c1c1c;
 
-    input {
+  button,
+  select,
+  input {
+    margin-right: 10px;
+    padding: 5px 10px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-size: 18px;
+
+    &:hover {
       background-color: #444;
-      padding: 5px;
-      color: #fff;
-      border: none;
-      border-radius: 3px;
     }
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  input {
+    background-color: #444;
+    padding: 5px;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
   }
 }
 
 #main {
   background-color: #141414;
   padding: 20px 0;
-  margin-top: 52px;
+  margin-top: 20px;
   .view__inner {
     max-width: 1200px;
     margin: 0 auto;
@@ -192,7 +214,6 @@ const handleKeyPress = (event) => {
 
     .cards {
       display: flex;
-      justify-content: space-between;
       flex-wrap: wrap;
 
       .view__card {

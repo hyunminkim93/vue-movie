@@ -13,6 +13,18 @@
         <p><strong>평가 수:</strong> {{ media.vote_count }}</p>
       </div>
     </div>
+    <div class="cast">
+      <strong>출연진</strong>
+      <ul>
+        <li v-for="actor in cast" :key="actor.cast_id">
+          <img :src="'https://image.tmdb.org/t/p/w200' + actor.profile_path" :alt="actor.name" />
+          <div class="actor-info">
+            <p>{{ actor.name }}</p>
+            <p>({{ actor.character }})</p>
+          </div>
+        </li>
+      </ul>
+    </div>
     <button @click="goBackHome" class="back-button">페이지로 돌아가기</button>
   </div>
 </template>
@@ -23,6 +35,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
 const media = ref({})
+const cast = ref([])
 const route = useRoute()
 const router = useRouter()
 const tmdbApiKey = '942eab3ec16f08c32c8509fcdb16fcd4'
@@ -31,10 +44,15 @@ const fetchMediaDetails = async () => {
   const mediaType = route.params.mediaType
   const mediaID = route.params.movieID
   try {
-    const response = await axios.get(
+    const mediaResponse = await axios.get(
       `https://api.themoviedb.org/3/${mediaType}/${mediaID}?api_key=${tmdbApiKey}&language=ko-KR`
     )
-    media.value = response.data
+    media.value = mediaResponse.data
+
+    const castResponse = await axios.get(
+      `https://api.themoviedb.org/3/${mediaType}/${mediaID}/credits?api_key=${tmdbApiKey}&language=ko-KR`
+    )
+    cast.value = castResponse.data.cast.slice(0, 10) // 상위 10명의 출연진을 가져옴
   } catch (error) {
     console.log(error)
   }
@@ -67,6 +85,7 @@ onMounted(fetchMediaDetails)
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
 .media-content img {
@@ -94,6 +113,46 @@ onMounted(fetchMediaDetails)
 .media-info .overview {
   font-size: 1.3em;
   font-weight: bold;
+}
+
+.cast {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.cast strong {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  display: block;
+  margin-left: 210px;
+}
+
+.cast ul {
+  padding-left: 0;
+  list-style-type: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.cast li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.cast img {
+  width: 100px;
+  height: 150px;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+.actor-info {
+  margin-top: 5px;
 }
 
 .back-button {
