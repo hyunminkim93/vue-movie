@@ -22,7 +22,7 @@ const handleKeyPress = (event) => {
       <div class="logo">
         <h1>
           <img src="../../public/Movie.png" alt="영화를 검색하다 로고" class="logo-img" />
-          <span class="logo-text">영화를 검색하다</span>
+          <span class="logo-text">Movie informaiton</span>
         </h1>
       </div>
     </div>
