@@ -44,7 +44,6 @@ const handleKeyPress = (event) => {
 .header {
   background-color: #1c1c1c;
   color: #fff;
-  margin-top: -24px;
 
   &__inner {
     display: flex;

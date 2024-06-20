@@ -439,6 +439,7 @@ onMounted(() => {
   margin: 0 auto;
   padding: 20px;
 }
+
 .tabs {
   display: flex;
   margin-bottom: 20px;
@@ -551,5 +552,20 @@ iframe {
   padding: 5px 10px;
   cursor: pointer;
   border-radius: 4px;
+}
+
+@media (max-width: 1400px) {
+  .view__inner {
+    min-width: 100%;
+  }
+  .tabs {
+    /* flex-wrap: wrap; 줄어들었을때 줄바꿈*/
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  button {
+    min-width: fit-content; /*컨텐츠의 사이즈에 맞춤*/
+  }
 }
 </style>
