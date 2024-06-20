@@ -1,12 +1,14 @@
 # API를 이용한 영화 정보 소개 사이트
 
+![alt text](movie-info.png)
+
 # 설치
 
 -- 최신 버전의 Node.js가 설치되어 있는지 확인한 다음 명령줄에 다음 명령을 실행 (`npm init vue@latest`)
 
--- npm install oh-vue-icons 아이콘 사용시 필요
--- npm install axios
--- npm install vue-router
+-- npm install oh-vue-icons 아이콘 사용시 필요  
+-- npm install axios  
+-- npm install vue-router  
 -- npm install sass
 
 ## 개요
@@ -35,7 +37,6 @@
 - 트레일러 및 추가 정보를 표시하는 모달 창.
 - 특정 영화를 찾기 위한 검색 기능.
 - 영화 이미지에 플레이 버튼 클릭시 영상재생.
-- 영화에 좋아요 기능 추가.
 
 **구현:**
 
