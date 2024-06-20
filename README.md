@@ -4,10 +4,10 @@
 
 -- 최신 버전의 Node.js가 설치되어 있는지 확인한 다음 명령줄에 다음 명령을 실행 (`npm init vue@latest`)
 
--- npm install oh-vue-icons 아이콘 사용시 필요
--- npm install axios
--- npm install vue-router
--- npm install sass
+-- npm install oh-vue-icons 아이콘 사용시 필요   
+-- npm install axios   
+-- npm install vue-router   
+-- npm install sass   
 
 ## 개요
 
