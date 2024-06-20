@@ -1,6 +1,6 @@
 # API를 이용한 영화 정보 소개 사이트
 
-![alt text](movie-info.png)
+![alt text](./public/movie-info.png)
 
 # 설치
 
